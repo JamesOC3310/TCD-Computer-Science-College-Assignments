@@ -1,0 +1,85 @@
+%Artificial Intelligence Assignment 1
+
+
+
+%Skeleton code provided for the assignment
+%search([Node|_]) :-  goal(Node).
+%search([Node|More]) :-  findall(X,arc(Node,X),Children),
+%                        add2frontier(Children,More,New),
+%                        search(New).
+
+%Modified search
+search([[Node,Path,Cost]|_],FinalPath,Cost,_) :- append(Path,[Node],FinalPath), goal(Node).
+search([[Node,NodePath,NodeCost]|More],Path,Cost,KB) :-
+    												append(NodePath,[Node],FullPath),
+    												findall([X,FullPath,TotalCost], 
+            											(arc(Node,X,FoundCost,KB), 
+           											TotalCost is FoundCost+NodeCost),Children),
+    												add2frontier(Children,More,TmpFrontier),
+    												frontierSort(TmpFrontier,SortedFrontier),
+    													search(SortedFrontier,Path,Cost,KB).
+
+
+frontierSort([H|T],SortedList) :- sortRecursive(H,[],T,SortedList).
+
+sortRecursive(H,Sorted,[],[H|Sorted]).
+sortRecursive(X,Sorted,[H|T],SortedList) :- less-than(X,H), !,
+	sortRecursive(X,[H|Sorted],T,SortedList) ; 
+    sortRecursive(H,[X|Sorted],T,SortedList).
+
+
+
+%Taken from assignment specification
+less-than([[Node1|_],Cost1],[[Node2|_],Cost2]) :-
+								heuristic(Node1,Hvalue1), heuristic(Node2,Hvalue2),
+								F1 is Cost1+Hvalue1, F2 is Cost2+Hvalue2,
+								F1 =< F2.
+
+
+
+
+%Taken from assignment specification
+arc([H|T],Node,Cost,KB) :- member([H|B],KB), append(B,T,Node),
+								length(B,L), Cost is 1+ L/(L+1).
+
+
+
+
+add2frontier(Children,[],Children).
+add2frontier(Children,[H|T],[H|More]) :- 
+	add2frontier(Children,T,More).
+
+
+
+
+%Taken from assignment specification
+heuristic(Node,H) :- length(Node,H).
+goal([]).
+
+%Member of list predicate
+member(X, [X|_]).        		% member(X, [Head|Tail]) is true if X = Head 
+                         		% that is, if X is the head of the list
+member(X, [_|Tail]) :-   		% or if X is a member of Tail,
+  			member(X, Tail).    % ie. if member(X, Tail) is true.
+
+
+%A* search algorithm
+astar(Node,Path,Cost,KB) :- search([[Node,[],0]],Path,Cost,KB).
+
+%Test your code with queries such as
+%?- astar([q],Path,Cost,
+%[[q,a],[q,b,c],[a,d,e],[a,c,e,f],[b,c],[c,e,f],[e],[f,e]]).
+%Cost = 11.916666666666668,
+%Path = [[q], [a], [c, e, f], [e, f, e, f], [f, e, f], [e, e, f],
+%[e, f], [f], [e], []] ;
+%Cost = 13.499999999999998,
+%Path = [[q], [b, c], [c, c], [e, f, c], [f, c], [e, c], [c],
+%[e, f], [f], [e], []] ;
+%false
+
+%?-astar([q],Path,Cost,[[q,a],[q,b,c],[a],[b],[c]]).
+%Cost = 2.5,
+%Path = [[q], [a], []] ;
+%Cost = 3.6666666666666665,
+%Path = [[q], [b, c], [c], []] ;
+%false
