@@ -1,0 +1,130 @@
+## What this file does
+
+This file is a Python script created from a Google Colab notebook. It does two main things:
+
+1. Prepares and copies MIDI music files from a dataset.
+2. Reads melody text data, transforms it in several ways, and saves the transformed versions.
+
+---
+
+## Section 1: Colab setup and file extraction
+
+At the top, the file runs some commands that only work in a Colab notebook:
+
+- `!nvidia-smi` checks the GPU status.
+- `!unzip finalAssignment_musicDataset.zip` extracts a music dataset archive.
+- `!unzip finalAssignment_GPT.zip` extracts another archive.
+- `!pip install mido pydub simpleaudio` installs Python packages for working with MIDI and audio.
+
+These commands are not normal Python code; they are notebook "shell commands."
+
+---
+
+## Section 2: Copy MIDI files
+
+This part copies MIDI files from a dataset folder into a simpler target folder:
+
+- `source_dir` is `/content/finalAssignment_musicDataset/BiMMuDa`
+- `target_dir` is `musicDatasetOriginal`
+- The code walks through every folder under `source_dir`
+- It finds files ending in `_full.mid`
+- It copies each such file into `musicDatasetOriginal`
+
+Then it prints the list of files in `musicDatasetOriginal`.
+
+So this is a simple data-preparation step: collect all full MIDI files into one folder.
+
+---
+
+## Section 3: Verify input melody text
+
+Next, it opens a text file:
+
+- `/content/finalAssignment_musicDataset/inputMelodies.txt`
+
+It reads every line and prints it. This shows the original melody data.
+
+---
+
+## Section 4: Music augmentation functions
+
+The file defines several functions to transform melody sequences. These are used later to create more training data from the input melodies.
+
+### Note definitions
+It defines:
+- `NOTE_FREQUENCIES`: a dictionary of note names and sound frequencies
+- `NOTES`: an ordered list of note symbols including sharps (`c`, `d`, `f`, `g`, `a`)
+
+### `translate_notes(notes, shift)`
+- Moves every note up or down by `shift` positions inside the `NOTES` list.
+- This is like transposing the melody to a different key.
+- Non-note characters are left unchanged.
+
+### `rhythm_variations(sequence, rest_probability=0.2)`
+- Adds random rests (`R`) between notes.
+- Each note has a chance of being followed by a rest.
+- This creates rhythmic variation in the melody.
+
+### `group_into_phrases(sequence, phrase_length=4)`
+- Groups notes into chunks of 4 notes.
+- Example: `C D E F G A` becomes something like `CDEF G A`
+- This helps the model learn sequences in phrase-sized blocks.
+
+### `compact_tokenization(sequence)`
+- Compresses repeated notes.
+- Example: `C C C D` becomes `C*3 D`
+- This makes repeated patterns shorter and easier to store.
+
+### `reverse_melody(sequence)`
+- Reverses the order of notes.
+- Example: `C D E` becomes `E D C`
+
+### `scale_pitch(sequence, scale_factor)`
+- Similar to transpose, but uses a random `scale_factor`.
+- Shifts each note by a few semitones up or down.
+
+---
+
+## Section 5: Augmenting the melody data
+
+The script reads the input melody file:
+
+- `with open('/content/inputMelodies.txt', 'r') as file:`
+
+Then it creates augmented versions of each melody by applying several transformations:
+
+For each shift in `[1, 2, 3, 4, 5]`:
+- transpose the melody by that shift
+- randomly scale the pitch by `-2` to `+2`
+- add random rhythm rests
+- reverse the melody
+- group notes into phrases of 4
+- compact repeated notes
+
+It prints details for the first 3 examples to show the steps.
+
+All transformed melodies are collected in `augmented_melodies`.
+
+---
+
+## Section 6: Save the augmented melodies
+
+Finally, the script writes the new data to a file:
+
+- `inputMelodiesAugmented.txt`
+
+Each transformed melody is saved on its own line.
+
+---
+
+## Summary
+
+This file:
+- extracts a music dataset from zip files,
+- copies MIDI files into a working directory,
+- reads melody text data,
+- defines functions to change pitch, rhythm, order, and compression,
+- creates many augmented melody examples,
+- and saves the new melodies to a file.
+
+It is mostly a data preparation / augmentation script for music machine learning.
